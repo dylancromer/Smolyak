@@ -1,7 +1,5 @@
-# TESTS: Leaving these here for now so that I don't have to do anything
-# fancy
-from ..grid import SmolyakGrid
-from ..interp import SmolyakInterp
+from smolyak.grid import SmolyakGrid
+from smolyak.interp import SmolyakInterp
 import numpy as np
 
 # func = lambda x, y: np.exp(x**2 - y**2)

@@ -1,9 +1,8 @@
+from smolyak.interp import SmolyakInterp
+from smolyak.grid import SmolyakGrid
+
+
 def test_derivatives():
-
-    from ..interp import SmolyakInterp
-    from ..grid import SmolyakGrid
-
-
     d = 5
     N = 100
     mu = 2
