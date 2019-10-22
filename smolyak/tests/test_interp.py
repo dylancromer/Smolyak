@@ -1,7 +1,7 @@
 # TESTS: Leaving these here for now so that I don't have to do anything
 # fancy
-from smolyak.grid import SmolyakGrid
-from smolyak.interp import SmolyakInterp
+from ..grid import SmolyakGrid
+from ..interp import SmolyakInterp
 import numpy as np
 
 # func = lambda x, y: np.exp(x**2 - y**2)
@@ -109,7 +109,7 @@ def interp2d_derivs(d, mu, f, f_prime, bds=1, verbose=True):
 # discovered and automatically run by nosetests
 
 def test_interp_2d():
-    
+
     interp_2d(2, 3, func1)
 
 def test_interp_2d1():
