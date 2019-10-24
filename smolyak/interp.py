@@ -108,7 +108,7 @@ class SmolyakInterp(object):
                 rets.append(vals)
 
             radii = 2/(sg.ub - sg.lb)
-            rets.append( d_vals*radii[None,:] )
+            rets.append(d_vals*radii[None, :])
 
         elif not deriv and interp:  # No derivs in build_B. Just do vals
             new_B = build_B(d, sg.mu, trans_points, sg.pinds)

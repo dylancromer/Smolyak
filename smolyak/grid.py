@@ -30,11 +30,7 @@ from itertools import chain
 import numpy as np
 from scipy.linalg import lu
 from functools import reduce
-from .util import *
-
-## --------------- ##
-#- Building Blocks -#
-## --------------- ##
+import smolyak.util
 
 __all__ = [
     'num_grid_points', 'm_i', 'cheby2n', 's_n', 'a_chain', 'phi_chain',
@@ -304,11 +300,6 @@ def phi_chain(n):
     return aphi_chain
 
 
-## ---------------------- ##
-#- Construction Utilities -#
-## ---------------------- ##
-
-
 def smol_inds(d, mu):
     """
     Finds all of the indices that satisfy the requirement that
@@ -352,9 +343,9 @@ def smol_inds(d, mu):
     ]
 
     if isinstance(mu, int):
-        true_inds = [[el for el in permute(list(val))] for val in poss_inds]
+        true_inds = [[el for el in smolyak.util.permute(list(val))] for val in poss_inds]
     else:
-        true_inds = [[el for el in permute(list(val)) if all(el <= mu + 1)]
+        true_inds = [[el for el in smolyak.util.permute(list(val)) if all(el <= mu + 1)]
                      for val in poss_inds]
 
     # Add the d dimension 1 array so that we don't repeat it a bunch
@@ -744,7 +735,6 @@ class SmolyakGrid(object):
         """
 
         import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
 
         grid = self.grid
         if grid.shape[1] == 2:
