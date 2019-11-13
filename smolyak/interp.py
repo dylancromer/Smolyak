@@ -12,12 +12,12 @@ from .grid import build_B
 __all__ = ['find_theta', 'SmolyakInterp']
 
 
-def find_theta(sg, f_on_grid):
+def find_theta(smolyak_grid, f_on_grid):
     """
     Given a SmolyakGrid object and the value of the function on the
     points of the grid, this function will return the coefficients theta
     """
-    return la.solve(sg.B_U, la.solve(sg.B_L, f_on_grid))
+    return la.solve(smolyak_grid.B_U, la.solve(smolyak_grid.B_L, f_on_grid))
 
 
 class SmolyakInterp(object):
@@ -26,17 +26,16 @@ class SmolyakInterp(object):
     SmolyakGrid object to be passed in and the values of the function
     evaluated at the grid points
     """
-    def __init__(self, sg, f_on_grid):
-        self.sg = sg
+    def __init__(self, smolyak_grid, f_on_grid):
+        self.smolyak_grid = smolyak_grid
         self.f_on_grid = f_on_grid
-        self.theta = find_theta(sg, self.f_on_grid)
+        self.theta = find_theta(smolyak_grid, self.f_on_grid)
 
     def update_theta(self, f_on_grid):
         self.f_on_grid = f_on_grid
-        self.theta = find_theta(self.sg, self.f_on_grid)
+        self.theta = find_theta(self.smolyak_grid, self.f_on_grid)
 
-    def interpolate(self, pts, interp=True, deriv=False, deriv_th=False,
-                    deriv_X=False):
+    def interpolate(self, pts, interp=True, deriv=False, deriv_th=False, deriv_X=False):
         """
         Basic Lagrange interpolation, with optional first derivatives
         (gradient)
@@ -46,7 +45,7 @@ class SmolyakInterp(object):
         pts : array (float, ndim=2)
             A 2d array of points on which to evaluate the function. Each
             row is assumed to be a new d-dimensional point. Therefore, pts
-            must have the same number of columns as ``si.SGrid.d``
+            must have the same number of columns as ``si.smolyak_gridrid.d``
 
         interp : bool, optional(default=false)
             Whether or not to compute the actual interpolation values at pts
@@ -91,39 +90,41 @@ class SmolyakInterp(object):
         TODO: finish the docstring for the 2nd and 3rd type of derivatives
 
         """
-        d = pts.shape[1]
-        sg = self.sg
+        dim = pts.shape[1]
+        smolyak_grid = self.smolyak_grid
 
         theta = self.theta
-        trans_points = sg.dom2cube(pts)  # Move points to correct domain
+        transformed_points = smolyak_grid.dom2cube(pts)  # Move points to correct domain
 
         rets = []
 
         if deriv:
-            new_B, der_B = build_B(d, sg.mu, trans_points, sg.pinds, True)
+            new_B, der_B = build_B(dim, smolyak_grid.mu, transformed_points, smolyak_grid.pinds, True)
             vals = new_B.dot(theta)
             d_vals = np.tensordot(theta, der_B, (0, 0)).T
 
             if interp:
                 rets.append(vals)
 
-            radii = 2/(sg.ub - sg.lb)
+            radii = 2/(smolyak_grid.ub - smolyak_grid.lb)
             rets.append(d_vals*radii[None, :])
 
+        ### this is all that is interesting for maszcal
         elif not deriv and interp:  # No derivs in build_B. Just do vals
-            new_B = build_B(d, sg.mu, trans_points, sg.pinds)
+            new_B = build_B(dim, smolyak_grid.mu, transformed_points, smolyak_grid.pinds)
             vals = new_B.dot(theta)
             rets.append(vals)
+        ###
 
         if deriv_th:  # The derivative wrt the coeffs is just new_B
             if not interp and not deriv:  # we  haven't found this  yet
-                new_B = build_B(d, sg.mu, trans_points, sg.pinds)
+                new_B = build_B(dim, smolyak_grid.mu, transformed_points, smolyak_grid.pinds)
             rets.append(new_B)
 
         if deriv_X:
             if not interp and not deriv and not deriv_th:
-                new_B = build_B(d, sg.mu, trans_points, sg.pinds)
-            d_X = la.solve(sg.B_L.T, la.solve(sg.B_U.T, new_B.T)).T
+                new_B = build_B(dim, smolyak_grid.mu, transformed_points, smolyak_grid.pinds)
+            d_X = la.solve(smolyak_grid.B_L.T, la.solve(smolyak_grid.B_U.T, new_B.T)).T
             rets.append(d_X)
 
         if len(rets) == 1:

@@ -38,7 +38,7 @@ __all__ = [
 ]
 
 
-def num_grid_points(d, mu):
+def num_grid_points(dim, mu):
     """
     Checks the number of grid points for a given d, mu combination.
 
@@ -58,14 +58,14 @@ def num_grid_points(d, mu):
 
     """
     if mu == 1:
-        return 2 * d + 1
+        return 2 * dim + 1
 
     if mu == 2:
-        return 1 + 4 * d + 4 * d * (d - 1) / 2.
+        return 1 + 4 * dim + 4 * dim * (dim - 1) / 2.
 
     if mu == 3:
-        return 1 + 8 * d + 12 * d * (d - 1) / 2. + 8 * d * (d - 1) * (
-            d - 2) / 6.
+        return 1 + 8 * dim + 12 * dim * (dim - 1) / 2. + 8 * dim * (dim - 1) * (
+            dim - 2) / 6.
 
 
 def m_i(i):
@@ -461,14 +461,14 @@ def build_grid(d, mu, inds=None):
     return grid
 
 
-def build_B(d, mu, pts, b_inds=None, deriv=False):
+def build_B(dim, mu, pts, b_inds=None, deriv=False):
     """
     Compute the matrix B from equation 22 in JMMV 2013
     Translation of dolo.numeric.interpolation.smolyak.SmolyakBasic
 
     Parameters
     ----------
-    d : int
+    dim : int
         The number of dimensions on the grid
 
     mu : int or array (int, ndim=1, legnth=d)
@@ -500,8 +500,8 @@ def build_B(d, mu, pts, b_inds=None, deriv=False):
 
     """
     if b_inds is None:
-        inds = smol_inds(d, mu)
-        b_inds = poly_inds(d, mu, inds)
+        inds = smol_inds(dim, mu)
+        b_inds = poly_inds(dim, mu, inds)
 
     if isinstance(mu, int):
         max_mu = mu
@@ -513,23 +513,23 @@ def build_B(d, mu, pts, b_inds=None, deriv=False):
     npts = pts.shape[0]
     B = np.empty((npts, npolys), order='F')
     for ind, comb in enumerate(b_inds):
-        B[:, ind] = reduce(mul, [Ts[comb[i] - 1, i, :] for i in range(d)])
+        B[:, ind] = reduce(mul, [Ts[comb[i] - 1, i, :] for i in range(dim)])
 
     if deriv:
         # TODO: test this. I am going to bed.
         Us = cheby2n(pts.T, m_i(max_mu + 1), kind=2.0)
-        Us = np.concatenate([np.zeros((1, d, npts)), Us], axis=0)
+        Us = np.concatenate([np.zeros((1, dim, npts)), Us], axis=0)
         for i in range(Us.shape[0]):
             Us[i, :, :] = Us[i, :, :] * i
 
-        der_B = np.zeros((npolys, d, npts))
+        der_B = np.zeros((npolys, dim, npts))
 
-        for i in range(d):
+        for i in range(dim):
             for ind, comb in enumerate(b_inds):
                 der_B[ind, i, :] = reduce(
-                    mul, [(Ts[comb[k] - 1, k, :]
-                           if i != k else Us[comb[k] - 1, k, :])
-                          for k in range(d)])
+                    mul,
+                    [(Ts[comb[k] - 1, k, :] if i != k else Us[comb[k] - 1, k, :]) for k in range(dim)],
+                )
 
         return B, der_B
 
